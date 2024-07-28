@@ -9,7 +9,7 @@ One sensor and one base station, uploading data to Home Assistant with MQTT. Mea
     * [Adafruit PT1000 RTD Temperature Sensor Amplifier - MAX31865](https://www.adafruit.com/product/3328)
     * [Adafruit STEMMA Soil Sensor - I2C Capacitive Moisture Sensor - JST PH 2mm](https://www.adafruit.com/product/4026)
 * Base Station (RX)
-    * [Adafruit Feather M0 WiFi - ATSAMD21 + ATWINC1500]( https://www.adafruit.com/product/3010)
+    * [Adafruit Feather M0 WiFi - ATSAMD21 + ATWINC1500](https://www.adafruit.com/product/3010)
     * [Adafruit LoRa Radio FeatherWing - RFM95W 900 MHz - RadioFruit](https://www.adafruit.com/product/3231)
 * LiPo batteries
     * [Lithium Ion Cylindrical Battery - 3.7v 2200mAh](https://www.adafruit.com/product/1781)
@@ -24,8 +24,8 @@ All of these except RadioHead can be installed through the library manager in Ar
 * Arduino SAMD
 * Adafruit SAMD Boards
 * [RadioHead](https://www.airspayce.com/mikem/arduino/RadioHead/) (get the latest version instead of Adafruit github copy)
-* [Wifi101] https://www.arduino.cc/reference/en/libraries/wifi101/
-* [home-assistant-integration]( https://github.com/dawidchyrzynski/)arduino-home-assistant
+* [Wifi101](https://www.arduino.cc/reference/en/libraries/wifi101/)
+* [home-assistant-integration]( https://github.com/dawidchyrzynski/arduino-home-assistant)
 * [Adafruit Seesaw](https://github.com/adafruit/Adafruit_Seesaw)
 
 # Set up environment
@@ -48,8 +48,10 @@ All of these except RadioHead can be installed through the library manager in Ar
 1. Create a new HA user dedicated to the sensor
 
 # Configure
+Both RX and TX sketches need a config.h
 1. Copy config.h.example to config.h
-1. Add your WiFi and MQTT details to config.h
+1. Add your WiFi and MQTT details to the RX config.h
+1. Add your soil moisture sensor calibration values to the TX config.h
 1. Upload the RX sketch to the base station
 1. Upload the TX sketch to the sensor
 
