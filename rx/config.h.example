@@ -1,0 +1,11 @@
+#define WIFI_SSID "SSID"
+#define WIFI_PASS "PASSWORD"
+
+#define MQTT_BROKER_ADDR "localhost"
+#define MQTT_BROKER_PORT 1883
+#define MQTT_USER "username"
+#define MQTT_PASS "password"
+
+// How often does the base station listen for a packet?
+// Default 5000 (5 seconds), increase to save battery but might miss packets
+#define LISTEN_INTERVAL 5000

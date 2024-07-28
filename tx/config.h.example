@@ -1,0 +1,7 @@
+# Soil moisture calibration values
+#define DRY_VALUE 320
+#define WET_VALUE 1016
+
+// How often does the sensor transmit?
+// Default 15000 (15 seconds), increase to save battery
+#define TRANSMIT_INTERVAL 15000
