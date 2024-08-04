@@ -16,15 +16,15 @@ RH_RF95 rf95(RFM95_CS, RFM95_INT);
 
 int wifiStatus = WL_IDLE_STATUS;
 
-HADevice device;
 WiFiClient client;
-HAMqtt mqtt(client, device);
-HASensorNumber baseBattery("baseBattery", HASensorNumber::PrecisionP3);
-HASensorNumber sensorBattery("sensorBattery", HASensorNumber::PrecisionP3);
-HASensorNumber soilTemperature("soilTemperature", HASensorNumber::PrecisionP3);
-HASensorNumber airTemperature("airTemperature", HASensorNumber::PrecisionP3);
-HASensorNumber soilCapacitance("soilCapacitance");
-HASensorNumber soilMoisture("soilMoisture", HASensorNumber::PrecisionP2);
+HADevice device;
+HAMqtt mqtt(client, device, 40);
+HASensorNumber baseBattery("baseBattery", HASensorNumber::PrecisionP2);
+HASensorNumber sensorBattery("sensorBattery", HASensorNumber::PrecisionP2);
+HASensorNumber soilTemperature("soilTemperature", HASensorNumber::PrecisionP2);
+HASensorNumber airTemperature("airTemperature", HASensorNumber::PrecisionP2);
+HASensorNumber wetness("wetness", HASensorNumber::PrecisionP1);
+HASensorNumber loraRSSI("loraRSSI", HASensorNumber::PrecisionP1);
 
 String uniqueID = "";
 
@@ -33,6 +33,7 @@ String uniqueID = "";
 void setup() {
   delay(1000);
   pinMode(LED_BUILTIN, OUTPUT);
+  digitalWrite(LED_BUILTIN, HIGH);
 
   // Setup Serial port
   Serial.begin(115200);
@@ -112,54 +113,63 @@ void setup() {
   airTemperature.setName("Air Temperature");
   airTemperature.setUnitOfMeasurement("C");
 
-  soilCapacitance.setIcon("mdi:ski-water");
-  soilCapacitance.setName("Soil Capacitance");
-  soilCapacitance.setUnitOfMeasurement("/1023");
-
-  soilMoisture.setIcon("mdi:water");
-  soilMoisture.setName("Soil Moisture");
-  soilMoisture.setUnitOfMeasurement("%");
+  wetness.setIcon("mdi:ski-water");
+  wetness.setName("Wetness");
+  wetness.setUnitOfMeasurement("Wetness");
 
   baseBattery.setIcon("mdi:battery");
   baseBattery.setName("Base Battery");
   baseBattery.setUnitOfMeasurement("V");
 
+  loraRSSI.setIcon("mdi:antenna");
+  loraRSSI.setName("Sensor LoRa RSSI");
+  loraRSSI.setUnitOfMeasurement("dBm");
+
   // mqtt.setKeepAlive(60); // set the keep alive interval to 60 seconds, default is 15 seconds
   mqtt.begin(MQTT_BROKER_ADDR, MQTT_BROKER_PORT, MQTT_USER, MQTT_PASS);
 
   Serial.println("Setup completed.");
+  digitalWrite(LED_BUILTIN, LOW);
 }
 
 void loop() {
-  static float batteryReadings[NUM_READINGS];
+  static float baseBatteryReadings[NUM_READINGS];
+  static float loraRSSIReadings[NUM_READINGS];
   static bool initialized = false;
   static int index = 0;
-  static float v_ma = 0;
+  static float baseBatteryAverage = 0;
+  static float loraRSSIAverage = 0;
 
   mqtt.loop();
-
-  // Base station battery voltage
-  int rawBatteryValue = analogRead(A7);
-  float batteryVoltage = rawBatteryValue * (3.3 / 1023.0) * 2;
-  if (!initialized) {
-    for (int i = 0; i < NUM_READINGS; i++) {
-        batteryReadings[i] = batteryVoltage;
-    }
-    v_ma = batteryVoltage;
-    initialized = true;
-  }
-  batteryReadings[index] = batteryVoltage;
-  index = (index + 1) % NUM_READINGS;
-  v_ma = calculateMovingAverage(batteryReadings, NUM_READINGS);
-  baseBattery.setValue(v_ma);
 
   if (rf95.available()) {
     uint8_t buf[RH_RF95_MAX_MESSAGE_LEN];
     uint8_t len = sizeof(buf);
 
     if (rf95.recv(buf, &len)) {
-      Serial.print("RX ");
       digitalWrite(LED_BUILTIN, HIGH);
+
+      int loraRSSIValue = rf95.lastRssi();
+
+      // Base station battery voltage
+      int rawBatteryValue = analogRead(A7);
+      float batteryVoltage = rawBatteryValue * (3.3 / 1023.0) * 2;
+      if (!initialized) {
+        for (int i = 0; i < NUM_READINGS; i++) {
+            baseBatteryReadings[i] = batteryVoltage;
+            loraRSSIReadings[i] = loraRSSIValue;
+        }
+        baseBatteryAverage = batteryVoltage;
+        loraRSSIAverage = loraRSSIValue;
+        initialized = true;
+      }
+      baseBatteryReadings[index] = batteryVoltage;
+      loraRSSIReadings[index] = loraRSSIValue;
+      index = (index + 1) % NUM_READINGS;
+      baseBatteryAverage = calculateMovingAverage(baseBatteryReadings, NUM_READINGS);
+      loraRSSIAverage = calculateMovingAverage(loraRSSIReadings, NUM_READINGS);
+      baseBattery.setValue(baseBatteryAverage, true);
+      loraRSSI.setValue(loraRSSIAverage, true);
 
       buf[len] = '\0';
       // Serial.println((char*)buf);
@@ -170,23 +180,20 @@ void loop() {
       float soilTemperatureValue = doc["soil_temp"];
       float sensorBatteryValue = doc["battery"];
       float airTemperatureValue = doc["air_temp"];
-      int soilCapacitanceValue = doc["soil_cap"];
-      int soilMoistureValue = doc["moisture"];
-      int rssi = rf95.lastRssi();
+      float wetnessValue = doc["wetness"];
+      
+      soilTemperature.setValue(soilTemperatureValue, true);
+      sensorBattery.setValue(sensorBatteryValue, true);
+      airTemperature.setValue(airTemperatureValue, true);
+      wetness.setValue(wetnessValue, true);
 
-      soilTemperature.setValue(soilTemperatureValue);
-      sensorBattery.setValue(sensorBatteryValue);
-      airTemperature.setValue(airTemperatureValue);
-      soilCapacitance.setValue(soilCapacitanceValue);
-      soilMoisture.setValue(soilMoistureValue);
-
+      Serial.print("RX ");      
       Serial.print("ID: "); Serial.print(sensorId);
-      Serial.print(", Soil Temp: "); Serial.print(soilTemperatureValue, 3);
-      Serial.print(", Air Temp: "); Serial.print(airTemperatureValue, 3); Serial.print(" C");
-      Serial.print(", Soil Capacitance: "); Serial.print(soilCapacitanceValue);
-      Serial.print(", Soil Moisture: "); Serial.print(soilMoistureValue); Serial.print("%");
-      Serial.print(", Battery: "); Serial.print(sensorBatteryValue, 3);
-      Serial.print(", RSSI: "); Serial.print(rssi);
+      Serial.print(", Soil Temp: "); Serial.print(soilTemperatureValue, 2);
+      Serial.print(", Air Temp: "); Serial.print(airTemperatureValue, 2);
+      Serial.print(", Wetness: "); Serial.print(wetnessValue, 1);
+      Serial.print(", Battery: "); Serial.print(sensorBatteryValue, 2);
+      Serial.print(", LoRa RSSI: "); Serial.print(loraRSSIAverage, 1);
       Serial.println();
 
       digitalWrite(LED_BUILTIN, LOW);
