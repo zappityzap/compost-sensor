@@ -29,6 +29,9 @@ String uniqueID = "";
 #define NUM_READINGS 5
 
 void setup() {
+  pinMode(LED_BUILTIN, OUTPUT);
+  digitalWrite(LED_BUILTIN, HIGH);
+
   Serial.begin(115200);
   for (int i = 0; i < 5; i++) {
     if (!Serial) delay(100);
@@ -94,63 +97,63 @@ void loop() {
 
   int rawBatteryValue = analogRead(A7);
   float batteryVoltage = rawBatteryValue * (3.3 / 1023.0) * 2;
-  float temperature = thermo.temperature(RNOMINAL, RREF);
-  
-  static float tempReadings[NUM_READINGS];
+  float soilTemperature = thermo.temperature(RNOMINAL, RREF);
+
+  // air temp sensor on moisture sensor is +/- 2 *C
+  float airTemperature = ss.getTemp();
+
+  // capacitance max is 1023, needs calibration for each sensor
+  uint16_t wetness = ss.touchRead(0);
+
+  static float soilTempReadings[NUM_READINGS];
   static float batteryReadings[NUM_READINGS];
+  static float airTempReadings[NUM_READINGS];
+  static float wetnessReadings[NUM_READINGS];
   static bool initialized = false;
   static int index = 0;
-  static float t_ma = 0;
-  static float v_ma = 0;
+  static float soilTemperatureAverage = 0;
+  static float batteryVoltageAverage = 0;
+  static float airTemperatureAverage = 0;
+  static float wetnessAverage = 0;
 
   if (!initialized) {
     for (int i = 0; i < NUM_READINGS; i++) {
-        tempReadings[i] = temperature;
+        soilTempReadings[i] = soilTemperature;
         batteryReadings[i] = batteryVoltage;
+        airTempReadings[i] = airTemperature;
+        wetnessReadings[i] = wetness;
     }
-    t_ma = temperature;
-    v_ma = batteryVoltage;
+    soilTemperatureAverage = soilTemperature;
+    batteryVoltageAverage = batteryVoltage;
+    airTemperatureAverage = airTemperature;
+    wetnessAverage = wetness;
     initialized = true;
   }
-  tempReadings[index] = temperature;
+  soilTempReadings[index] = soilTemperature;
   batteryReadings[index] = batteryVoltage;
+  airTempReadings[index] = airTemperature;
+  wetnessReadings[index] = wetness;
   index = (index + 1) % NUM_READINGS;
 
-  t_ma = calculateMovingAverage(tempReadings, NUM_READINGS);
-  v_ma = calculateMovingAverage(batteryReadings, NUM_READINGS);
-
-  // Soil percentage mapping
-  // https://forums.adafruit.com/viewtopic.php?t=211625&hilit=soil
-
-  // temp is +/- 2C
-  float ss_temp = ss.getTemp();
-  // capacitance max is 1023, needs calibration for each sensor
-  uint16_t ss_cap = ss.touchRead(0);
-
-  // Map the capacitive value to a percentage
-  float moisturePercentage = (ss_cap - DRY_VALUE) * 100 / (WET_VALUE - DRY_VALUE);
-  if (moisturePercentage < 0) {
-      moisturePercentage = 0;
-  } else if (moisturePercentage > 100) {
-      moisturePercentage = 100;
-  }
+  soilTemperatureAverage = calculateMovingAverage(soilTempReadings, NUM_READINGS);
+  batteryVoltageAverage = calculateMovingAverage(batteryReadings, NUM_READINGS);
+  airTemperatureAverage = calculateMovingAverage(airTempReadings, NUM_READINGS);
+  wetnessAverage = calculateMovingAverage(wetnessReadings, NUM_READINGS);
 
   Serial.print("TX: ");
-  Serial.print("Soil Temp: "); Serial.print(t_ma, 3);
-  Serial.print(", Air Temp: "); Serial.print(ss_temp, 3);
-  Serial.print(", Soil Capacitance: "); Serial.print(ss_cap);
-  Serial.print(", Soil Moisture: "); Serial.print(moisturePercentage, 0); Serial.print("%");
-  Serial.print(", Battery: "); Serial.print(v_ma, 3);
+  Serial.print("Soil Temp: "); Serial.print(soilTemperatureAverage, 2);
+  Serial.print(", Air Temp: "); Serial.print(airTemperatureAverage, 2);
+  Serial.print(", Wetness: "); Serial.print(wetness, 1);
+  Serial.print(", Battery: "); Serial.print(batteryVoltageAverage, 2);
   Serial.println();
 
   // Create the JSON document
   JsonDocument doc;
   doc["id"] = uniqueID;
-  doc["battery"] = floatToString(v_ma, 3);
-  doc["soil_temp"] = floatToString(t_ma, 3);
-  doc["air_temp"] = floatToString(ss_temp, 3);
-  doc["soil_cap"] = ss_cap;
-  doc["moisture"] = moisturePercentage;
+  doc["battery"] = floatToString(batteryVoltageAverage, 2);
+  doc["soil_temp"] = floatToString(soilTemperatureAverage, 2);
+  doc["air_temp"] = floatToString(airTemperatureAverage, 2);
+  doc["wetness"] = floatToString(wetnessAverage, 1);
 
   // Serialize JSON document
   char jsonBuffer[255];
