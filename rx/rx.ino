@@ -6,6 +6,8 @@
 
 #include "config.h"
 
+#define NUM_READINGS 5
+
 #define RFM95_RST 11  // "A"
 #define RFM95_CS  10  // "B"
 #define RFM95_INT  6  // "D"
@@ -27,8 +29,6 @@ HASensorNumber wetness("wetness", HASensorNumber::PrecisionP1);
 HASensorNumber loraRSSI("loraRSSI", HASensorNumber::PrecisionP1);
 
 String uniqueID = "";
-
-#define NUM_READINGS 5
 
 void setup() {
   delay(1000);
@@ -134,13 +134,11 @@ void setup() {
 
 void loop() {
   static float baseBatteryReadings[NUM_READINGS];
-  static float loraRSSIReadings[NUM_READINGS];
+  static float loraRssiReadings[NUM_READINGS];
   static bool initialized = false;
   static int index = 0;
   static float baseBatteryAverage = 0;
-  static float loraRSSIAverage = 0;
-
-  mqtt.loop();
+  static float loraRssiAverage = 0;
 
   if (rf95.available()) {
     uint8_t buf[RH_RF95_MAX_MESSAGE_LEN];
@@ -148,8 +146,9 @@ void loop() {
 
     if (rf95.recv(buf, &len)) {
       digitalWrite(LED_BUILTIN, HIGH);
+      Serial.println();
 
-      int loraRSSIValue = rf95.lastRssi();
+      int loraRssiValue = rf95.lastRssi();
 
       // Base station battery voltage
       int rawBatteryValue = analogRead(A7);
@@ -189,13 +188,13 @@ void loop() {
       airTemperature.setValue(airTemperatureValue, true);
       wetness.setValue(wetnessValue, true);
 
-      Serial.print("RX ");      
+      Serial.print("RX ");
       Serial.print("ID: "); Serial.print(sensorId);
       Serial.print(", Soil Temp: "); Serial.print(soilTemperatureValue, 2);
       Serial.print(", Air Temp: "); Serial.print(airTemperatureValue, 2);
       Serial.print(", Wetness: "); Serial.print(wetnessValue, 1);
       Serial.print(", Battery: "); Serial.print(sensorBatteryValue, 2);
-      Serial.print(", LoRa RSSI: "); Serial.print(loraRSSIAverage, 1);
+      Serial.print(", LoRa RSSI: "); Serial.print(loraRssiAverage, 1);
       Serial.println();
 
       digitalWrite(LED_BUILTIN, LOW);
@@ -205,6 +204,8 @@ void loop() {
   }
   
   // ADD BASE WIFI RSSI TOO
+
+  mqtt.loop();
 
   delay(LISTEN_INTERVAL);
 }
