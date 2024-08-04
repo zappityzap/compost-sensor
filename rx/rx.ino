@@ -101,6 +101,14 @@ void setup() {
   device.enableSharedAvailability();
   device.enableLastWill();
 
+  baseBattery.setIcon("mdi:battery");
+  baseBattery.setName("Base Battery");
+  baseBattery.setUnitOfMeasurement("V");
+
+  loraRSSI.setIcon("mdi:antenna");
+  loraRSSI.setName("Sensor LoRa RSSI");
+  loraRSSI.setUnitOfMeasurement("dBm");
+
   soilTemperature.setIcon("mdi:temperature-celsius");
   soilTemperature.setName("Soil Temperature");
   soilTemperature.setUnitOfMeasurement("C");
@@ -116,14 +124,6 @@ void setup() {
   wetness.setIcon("mdi:ski-water");
   wetness.setName("Wetness");
   wetness.setUnitOfMeasurement("Wetness");
-
-  baseBattery.setIcon("mdi:battery");
-  baseBattery.setName("Base Battery");
-  baseBattery.setUnitOfMeasurement("V");
-
-  loraRSSI.setIcon("mdi:antenna");
-  loraRSSI.setName("Sensor LoRa RSSI");
-  loraRSSI.setUnitOfMeasurement("dBm");
 
   // mqtt.setKeepAlive(60); // set the keep alive interval to 60 seconds, default is 15 seconds
   mqtt.begin(MQTT_BROKER_ADDR, MQTT_BROKER_PORT, MQTT_USER, MQTT_PASS);
@@ -172,7 +172,9 @@ void loop() {
       loraRSSI.setValue(loraRSSIAverage, true);
 
       buf[len] = '\0';
-      // Serial.println((char*)buf);
+      Serial.print("JSON length: "); Serial.print(strlen((char *)buf));
+      Serial.print(" "); Serial.println((char *)buf);
+
       JsonDocument doc;
       deserializeJson(doc, (char*)buf);
       
@@ -202,6 +204,8 @@ void loop() {
     }
   }
   
+  // ADD BASE WIFI RSSI TOO
+
   delay(LISTEN_INTERVAL);
 }
 
