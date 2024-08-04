@@ -25,6 +25,7 @@ RH_RF95 rf95(RFM95_CS, RFM95_INT);
 Adafruit_seesaw ss;
 
 String uniqueID = "";
+String shortID = "";
 
 #define NUM_READINGS 5
 
@@ -73,6 +74,10 @@ void setup() {
     if (i < 3) uniqueID += "-";
   }
   Serial.print("Unique ID: "); Serial.println(uniqueID);
+
+  // Friendly ID, hopefully unique
+  shortID = uniqueID.substring(uniqueID.length() - 3);
+  Serial.print("Short ID: "); Serial.println(shortID);
 
   // Battery
   analogReference(AR_DEFAULT);
@@ -149,7 +154,8 @@ void loop() {
 
   // Create the JSON document
   JsonDocument doc;
-  doc["id"] = uniqueID;
+  // doc["id"] = uniqueID;
+  doc["id"] = shortID;
   doc["battery"] = floatToString(batteryVoltageAverage, 2);
   doc["soil_temp"] = floatToString(soilTemperatureAverage, 2);
   doc["air_temp"] = floatToString(airTemperatureAverage, 2);
