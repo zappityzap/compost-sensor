@@ -1,5 +1,7 @@
-# Compost sensor v2
-One sensor and one base station, uploading data to Home Assistant with MQTT. Measures temperature, moisture and battery levels.
+# Compost sensor v3
+Multiple, independent sensors broadcasting over LoRa to a base station. Sensors are automatically discovered and added with unqiue short IDs. Base station uploads data to Home Assistant with MQTT over WiFi. Soil temperature, air temperature, LoRa and WiFi RSSI, and battery levels. Appears in Home Assistant as a single device:
+
+![image](https://github.com/user-attachments/assets/2a2510b2-a9e9-4e8b-8585-05f4cf96f634)
 
 # Hardware
 * Sensor (TX)
@@ -26,6 +28,7 @@ All of these except RadioHead can be installed through the library manager in Ar
 * [RadioHead](https://www.airspayce.com/mikem/arduino/RadioHead/) (get the latest version instead of Adafruit github copy)
 * [Wifi101](https://www.arduino.cc/reference/en/libraries/wifi101/)
 * [home-assistant-integration]( https://github.com/dawidchyrzynski/arduino-home-assistant)
+  * Note: [My PR](https://github.com/zappityzap/arduino-home-assistant/tree/pr-setconfig) is required for dynamic sensor creation
 * [Adafruit Seesaw](https://github.com/adafruit/Adafruit_Seesaw)
 
 # Set up environment
