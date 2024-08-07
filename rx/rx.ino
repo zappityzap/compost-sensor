@@ -186,6 +186,7 @@ void loop() {
         loraRssiMap[sensorId]->setIcon("mdi:antenna");
         loraRssiMap[sensorId]->setName(loraRssiNameMap[sensorId]->c_str());
         loraRssiMap[sensorId]->setUnitOfMeasurement("dBm");
+        loraRssiMap[sensorId]->setConfig();
 
         // Initialize RSSI readings and index
         for (int i = 0; i < NUM_READINGS; i++) {
@@ -201,6 +202,7 @@ void loop() {
         soilTemperatureMap[sensorId]->setIcon("mdi:temperature-celsius");
         soilTemperatureMap[sensorId]->setName(soilTemperatureNameMap[sensorId]->c_str());
         soilTemperatureMap[sensorId]->setUnitOfMeasurement("C");
+        soilTemperatureMap[sensorId]->setConfig();
       }
       if (sensorBatteryMap.find(sensorId) == sensorBatteryMap.end()) {
         sensorBatteryEntityMap[sensorId] = new String(sensorId + "_sensorBattery");
@@ -209,6 +211,7 @@ void loop() {
         sensorBatteryMap[sensorId]->setIcon("mdi:battery");
         sensorBatteryMap[sensorId]->setName(sensorBatteryNameMap[sensorId]->c_str());
         sensorBatteryMap[sensorId]->setUnitOfMeasurement("V");
+        sensorBatteryMap[sensorId]->setConfig();
       }
       if (airTemperatureMap.find(sensorId) == airTemperatureMap.end()) {
         airTemperatureEntityMap[sensorId] = new String(sensorId + "_airTemp");
@@ -217,6 +220,7 @@ void loop() {
         airTemperatureMap[sensorId]->setIcon("mdi:temperature-celsius");
         airTemperatureMap[sensorId]->setName(airTemperatureNameMap[sensorId]->c_str());
         airTemperatureMap[sensorId]->setUnitOfMeasurement("C");
+        airTemperatureMap[sensorId]->setConfig();
       }
       if (wetnessMap.find(sensorId) == wetnessMap.end()) {
         wetnessEntityMap[sensorId] = new String(sensorId + "_wetness");
@@ -225,6 +229,7 @@ void loop() {
         wetnessMap[sensorId]->setIcon("mdi:ski-water");
         wetnessMap[sensorId]->setName(wetnessNameMap[sensorId]->c_str());
         wetnessMap[sensorId]->setUnitOfMeasurement("Wetness");
+        wetnessMap[sensorId]->setConfig();
       }
 
       // Update RSSI readings
