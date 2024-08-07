@@ -180,8 +180,8 @@ void loop() {
       
       // Dynamically create sensors if they don't already exist
       if (loraRssiMap.find(sensorId) == loraRssiMap.end()) {
-        loraRssiEntityMap[sensorId] = new String("S" + sensorId + "_loraRssi");
-        loraRssiNameMap[sensorId] = new String("S" + sensorId + " LoRa RSSI");
+        loraRssiEntityMap[sensorId] = new String(sensorId + "_loraRssi");
+        loraRssiNameMap[sensorId] = new String(sensorId + " LoRa RSSI");
         loraRssiMap[sensorId] = new HASensorNumber(loraRssiEntityMap[sensorId]->c_str(), HASensorNumber::PrecisionP1);
         loraRssiMap[sensorId]->setIcon("mdi:antenna");
         loraRssiMap[sensorId]->setName(loraRssiNameMap[sensorId]->c_str());
@@ -195,32 +195,32 @@ void loop() {
         loraRssiAverageMap[sensorId] = 0;
       }
       if (soilTemperatureMap.find(sensorId) == soilTemperatureMap.end()) {
-        soilTemperatureEntityMap[sensorId] = new String("S" + sensorId + "_soilTemp");
-        soilTemperatureNameMap[sensorId] = new String("S" + sensorId + " Soil Temperature");
+        soilTemperatureEntityMap[sensorId] = new String(sensorId + "_soilTemp");
+        soilTemperatureNameMap[sensorId] = new String(sensorId + " Soil Temperature");
         soilTemperatureMap[sensorId] = new HASensorNumber(soilTemperatureEntityMap[sensorId]->c_str(), HASensorNumber::PrecisionP2);
         soilTemperatureMap[sensorId]->setIcon("mdi:temperature-celsius");
         soilTemperatureMap[sensorId]->setName(soilTemperatureNameMap[sensorId]->c_str());
         soilTemperatureMap[sensorId]->setUnitOfMeasurement("C");
       }
       if (sensorBatteryMap.find(sensorId) == sensorBatteryMap.end()) {
-        sensorBatteryEntityMap[sensorId] = new String("S" + sensorId + "_sensorBattery");
-        sensorBatteryNameMap[sensorId] = new String("S" + sensorId + " Battery");
+        sensorBatteryEntityMap[sensorId] = new String(sensorId + "_sensorBattery");
+        sensorBatteryNameMap[sensorId] = new String(sensorId + " Battery");
         sensorBatteryMap[sensorId] = new HASensorNumber(sensorBatteryEntityMap[sensorId]->c_str(), HASensorNumber::PrecisionP2);
         sensorBatteryMap[sensorId]->setIcon("mdi:battery");
         sensorBatteryMap[sensorId]->setName(sensorBatteryNameMap[sensorId]->c_str());
         sensorBatteryMap[sensorId]->setUnitOfMeasurement("V");
       }
       if (airTemperatureMap.find(sensorId) == airTemperatureMap.end()) {
-        airTemperatureEntityMap[sensorId] = new String("S" + sensorId + "_airTemp");
-        airTemperatureNameMap[sensorId] = new String("S" + sensorId + " Air Temperature");
+        airTemperatureEntityMap[sensorId] = new String(sensorId + "_airTemp");
+        airTemperatureNameMap[sensorId] = new String(sensorId + " Air Temperature");
         airTemperatureMap[sensorId] = new HASensorNumber(airTemperatureEntityMap[sensorId]->c_str(), HASensorNumber::PrecisionP2);
         airTemperatureMap[sensorId]->setIcon("mdi:temperature-celsius");
         airTemperatureMap[sensorId]->setName(airTemperatureNameMap[sensorId]->c_str());
         airTemperatureMap[sensorId]->setUnitOfMeasurement("C");
       }
       if (wetnessMap.find(sensorId) == wetnessMap.end()) {
-        wetnessEntityMap[sensorId] = new String("S" + sensorId + "_wetness");
-        wetnessNameMap[sensorId] = new String("S" + sensorId + " Wetness");
+        wetnessEntityMap[sensorId] = new String(sensorId + "_wetness");
+        wetnessNameMap[sensorId] = new String(sensorId + " Wetness");
         wetnessMap[sensorId] = new HASensorNumber(wetnessEntityMap[sensorId]->c_str(), HASensorNumber::PrecisionP1);
         wetnessMap[sensorId]->setIcon("mdi:ski-water");
         wetnessMap[sensorId]->setName(wetnessNameMap[sensorId]->c_str());
