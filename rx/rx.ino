@@ -140,7 +140,6 @@ void loop() {
   static int index = 0;
   static float baseBatteryAverage = 0;
   static float loraRssiAverage = 0;
-  bool published = false;
 
   if (rf95.available()) {
     uint8_t buf[RH_RF95_MAX_MESSAGE_LEN];
@@ -148,7 +147,6 @@ void loop() {
 
     if (rf95.recv(buf, &len)) {
       digitalWrite(LED_BUILTIN, HIGH);
-      Serial.println();
 
       int loraRssiValue = rf95.lastRssi();
 
@@ -165,12 +163,11 @@ void loop() {
       baseBatteryReadings[index] = batteryVoltage;
       index = (index + 1) % NUM_READINGS;
       baseBatteryAverage = calculateMovingAverage(baseBatteryReadings, NUM_READINGS);
-      published = baseBattery.setValue(baseBatteryAverage);
-      Serial.println(published ? "Published baseBatteryAverage" : "Failed to publish baseBatteryAverage");
+      baseBattery.setValue(baseBatteryAverage);
 
       buf[len] = '\0';
-      Serial.print("JSON length: "); Serial.print(strlen((char *)buf));
-      Serial.print(" "); Serial.println((char *)buf);
+      // Serial.print("JSON length: "); Serial.print(strlen((char *)buf));
+      // Serial.print(" "); Serial.println((char *)buf);
 
       JsonDocument doc;
       deserializeJson(doc, (char*)buf);
@@ -241,25 +238,11 @@ void loop() {
       loraRssiAverageMap[sensorId] = loraRssiAverage;
 
       // Send to Home Assistant
-      published = loraRssiMap[sensorId]->setValue(loraRssiAverage);
-      Serial.print("loraRssi "); Serial.print(loraRssiMap[sensorId]->uniqueId());
-      Serial.println(published ? " Published" : " Failed to publish");
-
-      published = soilTemperatureMap[sensorId]->setValue(soilTemperatureValue);
-      Serial.print("soilTemperatureValue "); Serial.print(soilTemperatureMap[sensorId]->uniqueId());
-      Serial.println(published ? " Published" : " Failed to publish");
-
-      published = sensorBatteryMap[sensorId]->setValue(sensorBatteryValue);
-      Serial.print("sensorBatteryValue "); Serial.print(sensorBatteryMap[sensorId]->uniqueId());
-      Serial.println(published ? " Published" : " Failed to publish");
-
-      published = airTemperatureMap[sensorId]->setValue(airTemperatureValue);
-      Serial.print("airTemperatureValue "); Serial.print(airTemperatureMap[sensorId]->uniqueId());
-      Serial.println(published ? " Published" : " Failed to publish");
-
-      published = wetnessMap[sensorId]->setValue(wetnessValue);
-      Serial.print("wetnessValue "); Serial.print(wetnessMap[sensorId]->uniqueId());
-      Serial.println(published ? " Published" : " Failed to publish");
+      loraRssiMap[sensorId]->setValue(loraRssiAverage);
+      soilTemperatureMap[sensorId]->setValue(soilTemperatureValue);
+      sensorBatteryMap[sensorId]->setValue(sensorBatteryValue);
+      airTemperatureMap[sensorId]->setValue(airTemperatureValue);
+      wetnessMap[sensorId]->setValue(wetnessValue);
 
       Serial.print("RX ");
       Serial.print("ID: "); Serial.print(sensorId);
