@@ -147,8 +147,11 @@ void loop() {
     Serial.print("Attempting to reconnect to SSID: ");
     Serial.println(WIFI_SSID);
     wifiStatus = WiFi.begin(WIFI_SSID, WIFI_PASS);
-    delay(1000);
-    printWiFiStatus();
+    if (wifiStatus == WL_CONNECTED) {
+      printWiFiStatus();
+    } else {
+      delay(1000);
+    }
   }
 
   if (rf95.available()) {
