@@ -141,6 +141,16 @@ void loop() {
   static float baseBatteryAverage = 0;
   static float loraRssiAverage = 0;
 
+  // check WiFi connection
+  wifiStatus = WiFi.status();
+  while (wifiStatus != WL_CONNECTED) {
+    Serial.print("Attempting to reconnect to SSID: ");
+    Serial.println(WIFI_SSID);
+    wifiStatus = WiFi.begin(WIFI_SSID, WIFI_PASS);
+    delay(1000);
+    printWiFiStatus();
+  }
+
   if (rf95.available()) {
     uint8_t buf[RH_RF95_MAX_MESSAGE_LEN];
     uint8_t len = sizeof(buf);
