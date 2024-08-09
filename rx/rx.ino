@@ -23,6 +23,7 @@ WiFiClient client;
 HADevice device;
 HAMqtt mqtt(client, device, 40);
 HASensorNumber baseBattery("baseBattery", HASensorNumber::PrecisionP2);
+HASensorNumber baseWifiRssi("baseWifiRssi", HASensorNumber::PrecisionP1);
 
 std::map<String, float[NUM_READINGS]> loraRssiReadingsMap;
 std::map<String, int> loraRssiIndexMap;
@@ -126,6 +127,10 @@ void setup() {
   baseBattery.setName("Base Battery");
   baseBattery.setUnitOfMeasurement("V");
 
+  baseWifiRssi.setIcon("mdi:wifi");
+  baseWifiRssi.setName("Base WiFi RSSI");
+  baseWifiRssi.setUnitOfMeasurement("dBm");
+
   // mqtt.setKeepAlive(60); // set the keep alive interval to 60 seconds, default is 15 seconds
   mqtt.begin(MQTT_BROKER_ADDR, MQTT_BROKER_PORT, MQTT_USER, MQTT_PASS);
 
@@ -136,10 +141,15 @@ void setup() {
 void loop() {
   static float baseBatteryReadings[NUM_READINGS];
   static float loraRssiReadings[NUM_READINGS];
-  static bool initialized = false;
+  static float wifiRssiReadings[NUM_READINGS];
+  static bool batteryInitialized = false;
+  static bool wifiInitialized = false;
+  static int batteryIndex = 0;
+  static int wifiIndex = 0;
   static int index = 0;
   static float baseBatteryAverage = 0;
   static float loraRssiAverage = 0;
+  static float wifiRssiAverage = 0;
 
   if (rf95.available()) {
     uint8_t buf[RH_RF95_MAX_MESSAGE_LEN];
@@ -153,17 +163,32 @@ void loop() {
       // Base station battery voltage
       int rawBatteryValue = analogRead(A7);
       float batteryVoltage = rawBatteryValue * (3.3 / 1023.0) * 2;
-      if (!initialized) {
+      if (!batteryInitialized) {
         for (int i = 0; i < NUM_READINGS; i++) {
             baseBatteryReadings[i] = batteryVoltage;
         }
         baseBatteryAverage = batteryVoltage;
-        initialized = true;
+        batteryInitialized = true;
       }
-      baseBatteryReadings[index] = batteryVoltage;
-      index = (index + 1) % NUM_READINGS;
+      baseBatteryReadings[batteryIndex] = batteryVoltage;
+      batteryIndex = (batteryIndex + 1) % NUM_READINGS;
       baseBatteryAverage = calculateMovingAverage(baseBatteryReadings, NUM_READINGS);
       baseBattery.setValue(baseBatteryAverage);
+
+      float wifiRssi = WiFi.RSSI();
+      if (!wifiInitialized) {
+        for (int i = 0; i < NUM_READINGS; i++) {
+          wifiRssiReadings[i] = wifiRssi;
+        }
+        wifiRssiAverage = wifiRssi;
+        wifiInitialized = true;
+      }
+
+      // Store the latest RSSI value and calculate the moving average
+      wifiRssiReadings[wifiIndex] = wifiRssi;
+      wifiRssiAverage = calculateMovingAverage(wifiRssiReadings, NUM_READINGS);
+      wifiIndex = (wifiIndex + 1) % NUM_READINGS;
+      baseWifiRssi.setValue(wifiRssiAverage);
 
       buf[len] = '\0';
       // Serial.print("JSON length: "); Serial.print(strlen((char *)buf));
@@ -256,15 +281,14 @@ void loop() {
       Serial.print(", Wetness: "); Serial.print(wetnessValue, 1);
       Serial.print(", Battery: "); Serial.print(sensorBatteryValue, 2);
       Serial.print(", LoRa RSSI: "); Serial.print(loraRssiAverage, 1);
+      Serial.print(", WiFi RSSI: "); Serial.print(wifiRssiAverage, 1);
       Serial.println();
 
       digitalWrite(LED_BUILTIN, LOW);
     } else {
       Serial.println("Receive failed");
     }
-  }
-  
-  // ADD BASE WIFI RSSI TOO
+  }  
 
   mqtt.loop();
 
