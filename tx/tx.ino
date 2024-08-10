@@ -29,6 +29,9 @@ String shortID = "";
 
 #define NUM_READINGS 5
 
+bool thermoPresent = false;
+bool seesawPresent = false;
+
 void setup() {
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, HIGH);
@@ -77,6 +80,7 @@ void setup() {
 
   // Friendly ID, hopefully unique
   shortID = uniqueID.substring(uniqueID.length() - 3);
+  shortID.toUpperCase();
   Serial.print("Short ID: "); Serial.println(shortID);
 
   // Battery
@@ -84,82 +88,110 @@ void setup() {
 
   // Temperature
   thermo.begin(MAX31865_3WIRE);
+  if (thermo.readRTD() != 0) {
+    thermoPresent = true;
+    Serial.println("MAX31865 found.");
+  } else {
+    Serial.println("MAX31865 not found.");
+  }
 
   // Soil
-  if (!ss.begin(0x36)) {
-    Serial.println("ERROR! seesaw not found");
-    while(1) delay(1);
-  } else {
+  if (ss.begin(0x36)) {
+    seesawPresent = true;
     Serial.print("Seesaw started. Version: ");
     Serial.println(ss.getVersion(), HEX);
+  } else {
+    Serial.println("Seesaw not found.");
   }
 
   Serial.println("Setup completed.");
 }
 
 void loop() {
+  static float soilTempReadings[NUM_READINGS];
+  static float airTempReadings[NUM_READINGS];
+  static float wetnessReadings[NUM_READINGS];
+  static float batteryReadings[NUM_READINGS];
+
+  static bool soilTempInitialized = false;
+  static bool airTempInitialized = false;
+  static bool wetnessInitialized = false;
+  static bool batteryInitialized = false;
+
+  static int index = 0;
+
+  static float soilTemperatureAverage = 0;
+  static float airTemperatureAverage = 0;
+  static float wetnessAverage = 0;
+  static float batteryVoltageAverage = 0;
+
   digitalWrite(LED_BUILTIN, HIGH);
+  JsonDocument doc;
+  Serial.print("TX ");
+  Serial.print("ID: "); Serial.print(shortID);
+  // doc["id"] = uniqueID;
+  doc["id"] = shortID;
+
+  if (thermoPresent) {
+    float soilTemperature = thermo.temperature(RNOMINAL, RREF);
+    if (!soilTempInitialized) {
+      for (int i = 0; i < NUM_READINGS; i++) {
+        soilTempReadings[i] = soilTemperature;
+      }
+      soilTemperatureAverage = soilTemperature;
+      soilTempInitialized = true;
+    }
+    soilTempReadings[index] = soilTemperature;
+    soilTemperatureAverage = calculateMovingAverage(soilTempReadings, NUM_READINGS);
+    doc["soil_temp"] = floatToString(soilTemperatureAverage, 2);
+    Serial.print(", Soil Temp: "); Serial.print(soilTemperatureAverage, 2);
+  }
+
+  if (seesawPresent) {
+    float airTemperature = ss.getTemp();
+    if (!airTempInitialized) {
+      for (int i = 0; i < NUM_READINGS; i++) {
+        airTempReadings[i] = airTemperature;
+      }
+      airTemperatureAverage = airTemperature;
+      airTempInitialized = true;
+    }
+    airTempReadings[index] = airTemperature;
+    airTemperatureAverage = calculateMovingAverage(airTempReadings, NUM_READINGS);
+    doc["air_temp"] = floatToString(airTemperatureAverage, 2);
+    Serial.print(", Air Temp: "); Serial.print(airTemperatureAverage, 2);
+
+    // capacitance max is 1023, needs calibration for each sensor
+    int wetness = ss.touchRead(0);
+    if (!wetnessInitialized) {
+      for (int i = 0; i < NUM_READINGS; i++) {
+        wetnessReadings[i] = wetness;
+      }
+      wetnessAverage = wetness;
+      wetnessInitialized = true;
+    }
+    wetnessReadings[index] = wetness;
+    wetnessAverage = calculateMovingAverage(wetnessReadings, NUM_READINGS);
+    doc["wetness"] = floatToString(wetnessAverage, 1);
+    Serial.print(", Wetness: "); Serial.print(wetnessAverage, 1);
+  }
 
   int rawBatteryValue = analogRead(A7);
   float batteryVoltage = rawBatteryValue * (3.3 / 1023.0) * 2;
-  float soilTemperature = thermo.temperature(RNOMINAL, RREF);
-
-  // air temp sensor on moisture sensor is +/- 2 *C
-  float airTemperature = ss.getTemp();
-
-  // capacitance max is 1023, needs calibration for each sensor
-  uint16_t wetness = ss.touchRead(0);
-
-  static float soilTempReadings[NUM_READINGS];
-  static float batteryReadings[NUM_READINGS];
-  static float airTempReadings[NUM_READINGS];
-  static float wetnessReadings[NUM_READINGS];
-  static bool initialized = false;
-  static int index = 0;
-  static float soilTemperatureAverage = 0;
-  static float batteryVoltageAverage = 0;
-  static float airTemperatureAverage = 0;
-  static float wetnessAverage = 0;
-
-  if (!initialized) {
+  if (!batteryInitialized) {
     for (int i = 0; i < NUM_READINGS; i++) {
-        soilTempReadings[i] = soilTemperature;
-        batteryReadings[i] = batteryVoltage;
-        airTempReadings[i] = airTemperature;
-        wetnessReadings[i] = wetness;
+      batteryReadings[i] = batteryVoltage;
     }
-    soilTemperatureAverage = soilTemperature;
     batteryVoltageAverage = batteryVoltage;
-    airTemperatureAverage = airTemperature;
-    wetnessAverage = wetness;
-    initialized = true;
+    batteryInitialized = true;
   }
-  soilTempReadings[index] = soilTemperature;
   batteryReadings[index] = batteryVoltage;
-  airTempReadings[index] = airTemperature;
-  wetnessReadings[index] = wetness;
-  index = (index + 1) % NUM_READINGS;
-
-  soilTemperatureAverage = calculateMovingAverage(soilTempReadings, NUM_READINGS);
   batteryVoltageAverage = calculateMovingAverage(batteryReadings, NUM_READINGS);
-  airTemperatureAverage = calculateMovingAverage(airTempReadings, NUM_READINGS);
-  wetnessAverage = calculateMovingAverage(wetnessReadings, NUM_READINGS);
-
-  Serial.print("TX: ");
-  Serial.print("Soil Temp: "); Serial.print(soilTemperatureAverage, 2);
-  Serial.print(", Air Temp: "); Serial.print(airTemperatureAverage, 2);
-  Serial.print(", Wetness: "); Serial.print(wetness, 1);
-  Serial.print(", Battery: "); Serial.print(batteryVoltageAverage, 2);
-  Serial.println();
-
-  // Create the JSON document
-  JsonDocument doc;
-  // doc["id"] = uniqueID;
-  doc["id"] = shortID;
   doc["battery"] = floatToString(batteryVoltageAverage, 2);
-  doc["soil_temp"] = floatToString(soilTemperatureAverage, 2);
-  doc["air_temp"] = floatToString(airTemperatureAverage, 2);
-  doc["wetness"] = floatToString(wetnessAverage, 1);
+  Serial.print(", Battery: "); Serial.print(batteryVoltageAverage, 2);
+
+  Serial.println();
+  index = (index + 1) % NUM_READINGS;
 
   // Serialize JSON document
   char jsonBuffer[255];

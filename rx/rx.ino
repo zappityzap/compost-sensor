@@ -171,7 +171,46 @@ void loop() {
     if (rf95.recv(buf, &len)) {
       digitalWrite(LED_BUILTIN, HIGH);
 
+      // Deserialize JSON
+      buf[len] = '\0';
+      // Serial.print("JSON length: "); Serial.print(strlen((char *)buf));
+      // Serial.print(" "); Serial.println((char *)buf);
+
+      JsonDocument doc;
+      deserializeJson(doc, (char*)buf);
+
+      Serial.print("RX ");
+
+      // Sensor ID
+      String sensorId = doc["id"];
+      Serial.print("ID: "); Serial.print(sensorId);
+
+      // LoRa RSSI
       int loraRssiValue = rf95.lastRssi();
+      if (loraRssiMap.find(sensorId) == loraRssiMap.end()) {
+        loraRssiEntityMap[sensorId] = new String(sensorId + "_loraRssi");
+        loraRssiNameMap[sensorId] = new String(sensorId + " LoRa RSSI");
+        loraRssiMap[sensorId] = new HASensorNumber(loraRssiEntityMap[sensorId]->c_str(), HASensorNumber::PrecisionP1);
+        loraRssiMap[sensorId]->setIcon("mdi:antenna");
+        loraRssiMap[sensorId]->setName(loraRssiNameMap[sensorId]->c_str());
+        loraRssiMap[sensorId]->setUnitOfMeasurement("dBm");
+        loraRssiMap[sensorId]->setConfig();
+
+        // Initialize RSSI readings and index
+        for (int i = 0; i < NUM_READINGS; i++) {
+            loraRssiReadingsMap[sensorId][i] = loraRssiValue;
+        }
+        loraRssiIndexMap[sensorId] = 0;
+        loraRssiAverageMap[sensorId] = 0;
+      }
+      int loraRssiIndex = loraRssiIndexMap[sensorId];
+      loraRssiReadingsMap[sensorId][index] = loraRssiValue;
+      index = (index + 1) % NUM_READINGS;
+      loraRssiIndexMap[sensorId] = index;
+      float loraRssiAverage = calculateMovingAverage(loraRssiReadingsMap[sensorId], NUM_READINGS);
+      Serial.print(", LoRa RSSI: "); Serial.print(loraRssiAverage, 1);
+      loraRssiAverageMap[sensorId] = loraRssiAverage;
+      loraRssiMap[sensorId]->setValue(loraRssiAverage);
 
       // Base station battery voltage
       int rawBatteryValue = analogRead(A7);
@@ -188,6 +227,7 @@ void loop() {
       baseBatteryAverage = calculateMovingAverage(baseBatteryReadings, NUM_READINGS);
       baseBattery.setValue(baseBatteryAverage);
 
+      // WiFi RSSI
       float wifiRssi = WiFi.RSSI();
       if (!wifiInitialized) {
         for (int i = 0; i < NUM_READINGS; i++) {
@@ -196,105 +236,76 @@ void loop() {
         wifiRssiAverage = wifiRssi;
         wifiInitialized = true;
       }
-
-      // Store the latest RSSI value and calculate the moving average
       wifiRssiReadings[wifiIndex] = wifiRssi;
       wifiRssiAverage = calculateMovingAverage(wifiRssiReadings, NUM_READINGS);
+      Serial.print(", WiFi RSSI: "); Serial.print(wifiRssiAverage, 1);
       wifiIndex = (wifiIndex + 1) % NUM_READINGS;
       baseWifiRssi.setValue(wifiRssiAverage);
 
-      buf[len] = '\0';
-      // Serial.print("JSON length: "); Serial.print(strlen((char *)buf));
-      // Serial.print(" "); Serial.println((char *)buf);
-
-      JsonDocument doc;
-      deserializeJson(doc, (char*)buf);
-      
-      String sensorId = doc["id"];
-      float soilTemperatureValue = doc["soil_temp"];
-      float sensorBatteryValue = doc["battery"];
-      float airTemperatureValue = doc["air_temp"];
-      float wetnessValue = doc["wetness"];
-      
-      // Dynamically create sensors if they don't already exist
-      if (loraRssiMap.find(sensorId) == loraRssiMap.end()) {
-        loraRssiEntityMap[sensorId] = new String(sensorId + "_loraRssi");
-        loraRssiNameMap[sensorId] = new String(sensorId + " LoRa RSSI");
-        loraRssiMap[sensorId] = new HASensorNumber(loraRssiEntityMap[sensorId]->c_str(), HASensorNumber::PrecisionP1);
-        loraRssiMap[sensorId]->setIcon("mdi:antenna");
-        loraRssiMap[sensorId]->setName(loraRssiNameMap[sensorId]->c_str());
-        loraRssiMap[sensorId]->setUnitOfMeasurement("dBm");
-        loraRssiMap[sensorId]->setConfig();
-
-        // Initialize RSSI readings and index
-        for (int i = 0; i < NUM_READINGS; i++) {
-            loraRssiReadingsMap[sensorId][i] = 0;
+      // Soil Temperature  
+      if (doc.containsKey("soil_temp")) {
+        float soilTemperatureValue = doc["soil_temp"];
+        Serial.print(", Soil Temp: "); Serial.print(soilTemperatureValue, 2);
+        if (soilTemperatureMap.find(sensorId) == soilTemperatureMap.end()) {
+          soilTemperatureEntityMap[sensorId] = new String(sensorId + "_soilTemp");
+          soilTemperatureNameMap[sensorId] = new String(sensorId + " Soil Temperature");
+          soilTemperatureMap[sensorId] = new HASensorNumber(soilTemperatureEntityMap[sensorId]->c_str(), HASensorNumber::PrecisionP2);
+          soilTemperatureMap[sensorId]->setIcon("mdi:temperature-celsius");
+          soilTemperatureMap[sensorId]->setName(soilTemperatureNameMap[sensorId]->c_str());
+          soilTemperatureMap[sensorId]->setUnitOfMeasurement("C");
+          soilTemperatureMap[sensorId]->setConfig();
         }
-        loraRssiIndexMap[sensorId] = 0;
-        loraRssiAverageMap[sensorId] = 0;
-      }
-      if (soilTemperatureMap.find(sensorId) == soilTemperatureMap.end()) {
-        soilTemperatureEntityMap[sensorId] = new String(sensorId + "_soilTemp");
-        soilTemperatureNameMap[sensorId] = new String(sensorId + " Soil Temperature");
-        soilTemperatureMap[sensorId] = new HASensorNumber(soilTemperatureEntityMap[sensorId]->c_str(), HASensorNumber::PrecisionP2);
-        soilTemperatureMap[sensorId]->setIcon("mdi:temperature-celsius");
-        soilTemperatureMap[sensorId]->setName(soilTemperatureNameMap[sensorId]->c_str());
-        soilTemperatureMap[sensorId]->setUnitOfMeasurement("C");
-        soilTemperatureMap[sensorId]->setConfig();
-      }
-      if (sensorBatteryMap.find(sensorId) == sensorBatteryMap.end()) {
-        sensorBatteryEntityMap[sensorId] = new String(sensorId + "_sensorBattery");
-        sensorBatteryNameMap[sensorId] = new String(sensorId + " Battery");
-        sensorBatteryMap[sensorId] = new HASensorNumber(sensorBatteryEntityMap[sensorId]->c_str(), HASensorNumber::PrecisionP2);
-        sensorBatteryMap[sensorId]->setIcon("mdi:battery");
-        sensorBatteryMap[sensorId]->setName(sensorBatteryNameMap[sensorId]->c_str());
-        sensorBatteryMap[sensorId]->setUnitOfMeasurement("V");
-        sensorBatteryMap[sensorId]->setConfig();
-      }
-      if (airTemperatureMap.find(sensorId) == airTemperatureMap.end()) {
-        airTemperatureEntityMap[sensorId] = new String(sensorId + "_airTemp");
-        airTemperatureNameMap[sensorId] = new String(sensorId + " Air Temperature");
-        airTemperatureMap[sensorId] = new HASensorNumber(airTemperatureEntityMap[sensorId]->c_str(), HASensorNumber::PrecisionP2);
-        airTemperatureMap[sensorId]->setIcon("mdi:temperature-celsius");
-        airTemperatureMap[sensorId]->setName(airTemperatureNameMap[sensorId]->c_str());
-        airTemperatureMap[sensorId]->setUnitOfMeasurement("C");
-        airTemperatureMap[sensorId]->setConfig();
-      }
-      if (wetnessMap.find(sensorId) == wetnessMap.end()) {
-        wetnessEntityMap[sensorId] = new String(sensorId + "_wetness");
-        wetnessNameMap[sensorId] = new String(sensorId + " Wetness");
-        wetnessMap[sensorId] = new HASensorNumber(wetnessEntityMap[sensorId]->c_str(), HASensorNumber::PrecisionP1);
-        wetnessMap[sensorId]->setIcon("mdi:ski-water");
-        wetnessMap[sensorId]->setName(wetnessNameMap[sensorId]->c_str());
-        wetnessMap[sensorId]->setUnitOfMeasurement("Wetness");
-        wetnessMap[sensorId]->setConfig();
+        soilTemperatureMap[sensorId]->setValue(soilTemperatureValue);
       }
 
-      // Update RSSI readings
-      int loraRssiIndex = loraRssiIndexMap[sensorId];
-      loraRssiReadingsMap[sensorId][index] = loraRssiValue;
-      index = (index + 1) % NUM_READINGS;
-      loraRssiIndexMap[sensorId] = index;
+      // Air Temperature
+      if (doc.containsKey("air_temp")) {
+        float airTemperatureValue = doc["air_temp"];
+        Serial.print(", Air Temp: "); Serial.print(airTemperatureValue, 2);
+        if (airTemperatureMap.find(sensorId) == airTemperatureMap.end()) {
+          airTemperatureEntityMap[sensorId] = new String(sensorId + "_airTemp");
+          airTemperatureNameMap[sensorId] = new String(sensorId + " Air Temperature");
+          airTemperatureMap[sensorId] = new HASensorNumber(airTemperatureEntityMap[sensorId]->c_str(), HASensorNumber::PrecisionP2);
+          airTemperatureMap[sensorId]->setIcon("mdi:temperature-celsius");
+          airTemperatureMap[sensorId]->setName(airTemperatureNameMap[sensorId]->c_str());
+          airTemperatureMap[sensorId]->setUnitOfMeasurement("C");
+          airTemperatureMap[sensorId]->setConfig();
+        }
+        airTemperatureMap[sensorId]->setValue(airTemperatureValue);
+      }
 
-      // Calculate moving average
-      float loraRssiAverage = calculateMovingAverage(loraRssiReadingsMap[sensorId], NUM_READINGS);
-      loraRssiAverageMap[sensorId] = loraRssiAverage;
+      // Wetness
+      if (doc.containsKey("wetness")) {
+        float wetnessValue = doc["wetness"];
+        Serial.print(", Wetness: "); Serial.print(wetnessValue, 1);
+        if (wetnessMap.find(sensorId) == wetnessMap.end()) {
+          wetnessEntityMap[sensorId] = new String(sensorId + "_wetness");
+          wetnessNameMap[sensorId] = new String(sensorId + " Wetness");
+          wetnessMap[sensorId] = new HASensorNumber(wetnessEntityMap[sensorId]->c_str(), HASensorNumber::PrecisionP1);
+          wetnessMap[sensorId]->setIcon("mdi:ski-water");
+          wetnessMap[sensorId]->setName(wetnessNameMap[sensorId]->c_str());
+          wetnessMap[sensorId]->setUnitOfMeasurement("Wetness");
+          wetnessMap[sensorId]->setConfig();
+        }
+        wetnessMap[sensorId]->setValue(wetnessValue);
+      }
 
-      // Send to Home Assistant
-      loraRssiMap[sensorId]->setValue(loraRssiAverage);
-      soilTemperatureMap[sensorId]->setValue(soilTemperatureValue);
-      sensorBatteryMap[sensorId]->setValue(sensorBatteryValue);
-      airTemperatureMap[sensorId]->setValue(airTemperatureValue);
-      wetnessMap[sensorId]->setValue(wetnessValue);
+      // Sensor Battery
+      if (doc.containsKey("battery")) {
+        float sensorBatteryValue = doc["battery"];
+        Serial.print(", Battery: "); Serial.print(sensorBatteryValue, 2);
+        if (sensorBatteryMap.find(sensorId) == sensorBatteryMap.end() && !isnan(sensorBatteryValue)) {
+          sensorBatteryEntityMap[sensorId] = new String(sensorId + "_sensorBattery");
+          sensorBatteryNameMap[sensorId] = new String(sensorId + " Battery");
+          sensorBatteryMap[sensorId] = new HASensorNumber(sensorBatteryEntityMap[sensorId]->c_str(), HASensorNumber::PrecisionP2);
+          sensorBatteryMap[sensorId]->setIcon("mdi:battery");
+          sensorBatteryMap[sensorId]->setName(sensorBatteryNameMap[sensorId]->c_str());
+          sensorBatteryMap[sensorId]->setUnitOfMeasurement("V");
+          sensorBatteryMap[sensorId]->setConfig();
+        }
+        sensorBatteryMap[sensorId]->setValue(sensorBatteryValue);
+      }
 
-      Serial.print("RX ");
-      Serial.print("ID: "); Serial.print(sensorId);
-      Serial.print(", Soil Temp: "); Serial.print(soilTemperatureValue, 2);
-      Serial.print(", Air Temp: "); Serial.print(airTemperatureValue, 2);
-      Serial.print(", Wetness: "); Serial.print(wetnessValue, 1);
-      Serial.print(", Battery: "); Serial.print(sensorBatteryValue, 2);
-      Serial.print(", LoRa RSSI: "); Serial.print(loraRssiAverage, 1);
-      Serial.print(", WiFi RSSI: "); Serial.print(wifiRssiAverage, 1);
       Serial.println();
 
       digitalWrite(LED_BUILTIN, LOW);
