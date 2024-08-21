@@ -86,21 +86,6 @@ void setup() {
 
   rf95.setTxPower(20, false);
 
-  // Unique ID
-  uint32_t id[4];
-  uint32_t *idAddress = (uint32_t *)0x0080A00C;
-  for (int i = 0; i < 4; i++) {
-    id[i] = idAddress[i];
-    uniqueID += String(id[i], HEX);
-    if (i < 3) uniqueID += "-";
-  }
-  Serial.print("Unique ID: "); Serial.println(uniqueID);
-
-  // Friendly ID, hopefully unique
-  shortID = uniqueID.substring(uniqueID.length() - 3);
-  shortID.toUpperCase();
-  Serial.print("Short ID: "); Serial.println(shortID);
-
   // Battery
   analogReference(AR_DEFAULT);
 
