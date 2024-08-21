@@ -33,9 +33,11 @@ bool thermoPresent = false;
 bool seesawPresent = false;
 
 void setup() {
+  delay(1000);
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, HIGH);
 
+  // Setup Serial port
   Serial.begin(115200);
   for (int i = 0; i < 5; i++) {
     if (!Serial) delay(100);
@@ -43,6 +45,21 @@ void setup() {
   delay(1000);
 
   Serial.println("\n\n\nCompost Temperature TX");
+
+  // Unique ID
+  uint32_t id[4];
+  uint32_t *idAddress = (uint32_t *)0x0080A00C;
+  for (int i = 0; i < 4; i++) {
+    id[i] = idAddress[i];
+    uniqueID += String(id[i], HEX);
+    if (i < 3) uniqueID += "-";
+  }
+  Serial.print("TX: Unique ID: "); Serial.println(uniqueID);
+
+  // Friendly ID, hopefully unique
+  shortID = uniqueID.substring(uniqueID.length() - 3);
+  shortID.toUpperCase();
+  Serial.print("TX: Short ID: "); Serial.println(shortID);
 
   // LoRa radio
   pinMode(RFM95_RST, OUTPUT);
@@ -55,11 +72,11 @@ void setup() {
   delay(10);
 
   while (!rf95.init()) {
-    Serial.println("LoRa radio init failed");
-    Serial.println("Uncomment '#define SERIAL_DEBUG' in RH_RF95.cpp for detailed debug info");
+    Serial.println("TX: LoRa radio init failed");
+    Serial.println("TX: Uncomment '#define SERIAL_DEBUG' in RH_RF95.cpp for detailed debug info");
     while (1);
   }
-  Serial.print("LoRa radio initialized.");
+  Serial.print("TX: LoRa radio initialized.");
 
   if (!rf95.setFrequency(RF95_FREQ)) {
     Serial.println(" setFrequency failed");
@@ -91,21 +108,25 @@ void setup() {
   thermo.begin(MAX31865_3WIRE);
   if (thermo.readRTD() != 0) {
     thermoPresent = true;
-    Serial.println("MAX31865 found.");
+    Serial.println("TX: MAX31865 found.");
   } else {
-    Serial.println("MAX31865 not found.");
+    Serial.println("TX: MAX31865 not found.");
   }
 
   // Soil
   if (ss.begin(0x36)) {
     seesawPresent = true;
-    Serial.print("Seesaw started. Version: ");
+    Serial.print("TX: Seesaw started. Version: ");
     Serial.println(ss.getVersion(), HEX);
   } else {
-    Serial.println("Seesaw not found.");
+    Serial.println("TX: Seesaw not found.");
   }
 
-  Serial.println("Setup completed.");
+  Serial.println("TX: Setup completed.");
+  digitalWrite(LED_BUILTIN, LOW);
+  Serial.println("Pausing for 10 seconds, last chance to flash it...");
+  delay(10000);
+  Serial.println("Oh no, bro! Here we go!");
 }
 
 void loop() {
@@ -127,6 +148,8 @@ void loop() {
   static float batteryVoltageAverage = 0;
 
   digitalWrite(LED_BUILTIN, HIGH);
+  Serial.println("TX: Loop begin");
+
   JsonDocument doc;
   Serial.print("TX ");
   Serial.print("ID: "); Serial.print(shortID);
@@ -204,6 +227,7 @@ void loop() {
   rf95.send((uint8_t *)jsonBuffer, strlen(jsonBuffer));
   rf95.waitPacketSent();
 
+  Serial.println("TX: Loop end");
   digitalWrite(LED_BUILTIN, LOW);
 
   delay(TRANSMIT_INTERVAL);
