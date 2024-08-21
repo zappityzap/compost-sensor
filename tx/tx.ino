@@ -215,6 +215,7 @@ void loop() {
   Serial.println("TX: Loop end");
   digitalWrite(LED_BUILTIN, LOW);
 
+  rf95.sleep();
   delay(TRANSMIT_INTERVAL);
 }
 
