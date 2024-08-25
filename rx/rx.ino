@@ -62,6 +62,7 @@ void setup() {
     if (!Serial) delay(100);
   }
   delay(100);
+
   Serial.println("\n\n\nCompost Temperature RX");
 
   // Unique ID
@@ -73,18 +74,18 @@ void setup() {
     if (i < 3) uniqueID += "-";
   }
   device.setUniqueId((byte*)uniqueID.c_str(), uniqueID.length());  
-  Serial.print("Unique ID: "); Serial.println(uniqueID);
+  Serial.print("RX: Unique ID: "); Serial.println(uniqueID);
 
   // Setup WiFi
   WiFi.setPins(8, 7, 4, 2);
 
   if (WiFi.status() == WL_NO_SHIELD) {
-    Serial.println("WiFi shield not present");
+    Serial.println("RX: WiFi shield not present");
     while (true);
   }
 
   while (wifiStatus != WL_CONNECTED) {
-    Serial.print("Attempting to connect to SSID: ");
+    Serial.print("RX: Attempting to connect to SSID: ");
     Serial.println(WIFI_SSID);
     wifiStatus = WiFi.begin(WIFI_SSID, WIFI_PASS);
     delay(1000);
@@ -102,11 +103,11 @@ void setup() {
   delay(10);
 
   while (!rf95.init()) {
-    Serial.println("LoRa radio init failed");
+    Serial.println("RX: LoRa radio init failed");
     Serial.println("Uncomment '#define SERIAL_DEBUG' in RH_RF95.cpp for detailed debug info");
     while (1);
   }
-  Serial.print("LoRa radio initialized.");
+  Serial.print("RX: LoRa radio initialized.");
 
   if (!rf95.setFrequency(RF95_FREQ)) {
     Serial.println(" setFrequency failed");
@@ -134,8 +135,11 @@ void setup() {
   // mqtt.setKeepAlive(60); // set the keep alive interval to 60 seconds, default is 15 seconds
   mqtt.begin(MQTT_BROKER_ADDR, MQTT_BROKER_PORT, MQTT_USER, MQTT_PASS);
 
-  Serial.println("Setup completed.");
+  Serial.println("RX: Setup completed.");
   digitalWrite(LED_BUILTIN, LOW);
+  Serial.println("Pausing for 10 seconds, last chance to flash it...");
+  delay(10000);
+  Serial.println("Oh no, bro! Here we go!");
 }
 
 void loop() {
@@ -312,9 +316,12 @@ void loop() {
     } else {
       Serial.println("Receive failed");
     }
-  }  
+  }
 
   mqtt.loop();
+
+  Serial.println("RX: Loop end");
+  digitalWrite(LED_BUILTIN, LOW);
 
   delay(LISTEN_INTERVAL);
 }
