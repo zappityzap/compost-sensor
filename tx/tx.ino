@@ -1,3 +1,4 @@
+#include <RTCZero.h>
 #include <SPI.h>
 #include <RH_RF95.h>
 #include <Adafruit_MAX31865.h>
@@ -5,6 +6,17 @@
 #include "Adafruit_seesaw.h"
 
 #include "config.h"
+
+// https://edgecollective.io/notes/proto1/
+// https://gist.githubusercontent.com/dwblair/b69a20dcf87314348bac970db574a723/raw/ca1f230cd33d78f76a67ec50a37ac1487adeb9b3/zerosleep.ino
+
+RTCZero zerortc;
+
+const byte alarmSeconds = 0;
+const byte alarmMinutes = 1;
+const byte alarmHours = 0;
+
+volatile bool alarmFlag = false; // Start awake
 
 // Use software SPI: CS, DI, DO, CLK
 Adafruit_MAX31865 thermo = Adafruit_MAX31865(10, 11, 12, 13);
@@ -107,6 +119,10 @@ void setup() {
     Serial.println("TX: Seesaw not found.");
   }
 
+  zerortc.begin(); // Set up clocks and such
+  resetAlarm();
+  zerortc.attachInterrupt(alarmMatch);
+
   Serial.println("TX: Setup completed.");
   digitalWrite(LED_BUILTIN, LOW);
   Serial.println("Pausing for 10 seconds, last chance to flash it...");
@@ -132,7 +148,11 @@ void loop() {
   static float wetnessAverage = 0;
   static float batteryVoltageAverage = 0;
 
-  digitalWrite(LED_BUILTIN, HIGH);
+  if (alarmFlag == true) {
+    alarmFlag = false;  // Clear flag
+    digitalWrite(LED_BUILTIN, HIGH);
+    Serial.println("Alarm went off - I'm awake!");
+  }
   Serial.println("TX: Loop begin");
 
   JsonDocument doc;
@@ -213,10 +233,34 @@ void loop() {
   rf95.waitPacketSent();
 
   Serial.println("TX: Loop end");
-  digitalWrite(LED_BUILTIN, LOW);
 
   rf95.sleep();
-  delay(TRANSMIT_INTERVAL);
+  
+  resetAlarm();  // Reset alarm before returning to sleep
+  Serial.println("Alarm set, going to sleep now.");
+  Serial.println("Serial port output may be unreliable, check RX side for activity.");
+  digitalWrite(LED_BUILTIN, LOW);
+  zerortc.standbyMode();    // Sleep until next alarm match
+}
+
+void alarmMatch(void)
+{
+  alarmFlag = true; // Set flag
+}
+
+void resetAlarm(void) {
+  byte seconds = 0;
+  byte minutes = 0;
+  byte hours = 0;
+  byte day = 1;
+  byte month = 1;
+  byte year = 1;
+  
+  zerortc.setTime(hours, minutes, seconds);
+  zerortc.setDate(day, month, year);
+
+  zerortc.setAlarmTime(alarmHours, alarmMinutes, alarmSeconds);
+  zerortc.enableAlarm(zerortc.MATCH_HHMMSS);
 }
 
 float calculateMovingAverage(float readings[], int size) {
