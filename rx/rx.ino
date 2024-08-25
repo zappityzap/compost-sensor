@@ -308,7 +308,7 @@ void loop() {
     } else {
       Serial.println("Receive failed");
     }
-  }  
+  }
 
   mqtt.loop();
 
