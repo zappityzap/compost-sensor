@@ -10,12 +10,19 @@ Multiple, independent sensors broadcasting over LoRa to a base station. Sensors 
     * [Platinum RTD Sensor - PT1000 - 3 Wire 1 meter long](https://www.adafruit.com/product/3984)
     * [Adafruit PT1000 RTD Temperature Sensor Amplifier - MAX31865](https://www.adafruit.com/product/3328)
     * [Adafruit STEMMA Soil Sensor - I2C Capacitive Moisture Sensor - JST PH 2mm](https://www.adafruit.com/product/4026)
+        * Note: These seem unreliable. Testing [Chirp!](https://www.tindie.com/products/miceuz/i2c-soil-moisture-sensor/) sensors next.
 * Base Station (RX)
     * [Adafruit Feather M0 WiFi - ATSAMD21 + ATWINC1500](https://www.adafruit.com/product/3010)
     * [Adafruit LoRa Radio FeatherWing - RFM95W 900 MHz - RadioFruit](https://www.adafruit.com/product/3231)
 * LiPo batteries
     * [Lithium Ion Cylindrical Battery - 3.7v 2200mAh](https://www.adafruit.com/product/1781)
     * [Lithium Ion Polymer Battery - 3.7v 500mAh Lithium Ion Polymer Battery - 3.7v 500mAh](https://www.adafruit.com/product/1578)
+* Stainless steel tube for temperature probe
+    * Aliexpress Seiko Metal Store
+    * Length 500mm x 1Pcs, OD5mm X ID4.2mm, feels a little too easy to bend. Easy fit in tube, might allow more epoxy for a stronger bond.
+    * Length 500mm x 1Pcs, OD5mm X ID4mm, feels stiffer. Need to trim blob of epoxy of on PT1000D for it to fit in.
+    * Another 150-250mm in length would be nice.
+    * Be careful buying elsewhere, tolerances on eBay stuff is junk.
 
 # Software
 * Latest [Ardunio IDE](http://www.arduino.cc/en/Main/Software)
@@ -25,6 +32,7 @@ Multiple, independent sensors broadcasting over LoRa to a base station. Sensors 
 All of these except RadioHead can be installed through the library manager in Arduino IDE.
 * Arduino SAMD
 * Adafruit SAMD Boards
+* [RTCZero](https://www.arduino.cc/reference/en/libraries/rtczero/)
 * [RadioHead](https://www.airspayce.com/mikem/arduino/RadioHead/) (get the latest version instead of Adafruit github copy)
 * [Wifi101](https://www.arduino.cc/reference/en/libraries/wifi101/)
 * [home-assistant-integration]( https://github.com/dawidchyrzynski/arduino-home-assistant)
