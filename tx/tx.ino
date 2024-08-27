@@ -131,23 +131,6 @@ void setup() {
 }
 
 void loop() {
-  static float soilTempReadings[NUM_READINGS];
-  static float airTempReadings[NUM_READINGS];
-  static float wetnessReadings[NUM_READINGS];
-  static float batteryReadings[NUM_READINGS];
-
-  static bool soilTempInitialized = false;
-  static bool airTempInitialized = false;
-  static bool wetnessInitialized = false;
-  static bool batteryInitialized = false;
-
-  static int index = 0;
-
-  static float soilTemperatureAverage = 0;
-  static float airTemperatureAverage = 0;
-  static float wetnessAverage = 0;
-  static float batteryVoltageAverage = 0;
-
   if (alarmFlag == true) {
     alarmFlag = false;  // Clear flag
     digitalWrite(LED_BUILTIN, HIGH);
@@ -163,64 +146,27 @@ void loop() {
 
   if (thermoPresent) {
     float soilTemperature = thermo.temperature(RNOMINAL, RREF);
-    if (!soilTempInitialized) {
-      for (int i = 0; i < NUM_READINGS; i++) {
-        soilTempReadings[i] = soilTemperature;
-      }
-      soilTemperatureAverage = soilTemperature;
-      soilTempInitialized = true;
-    }
-    soilTempReadings[index] = soilTemperature;
-    soilTemperatureAverage = calculateMovingAverage(soilTempReadings, NUM_READINGS);
-    doc["soil_temp"] = floatToString(soilTemperatureAverage, 2);
-    Serial.print(", Soil Temp: "); Serial.print(soilTemperatureAverage, 2);
+    doc["soil_temp"] = floatToString(soilTemperature, 2);
+    Serial.print(", Soil Temp: "); Serial.print(soilTemperature, 2);
   }
 
   if (seesawPresent) {
     float airTemperature = ss.getTemp();
-    if (!airTempInitialized) {
-      for (int i = 0; i < NUM_READINGS; i++) {
-        airTempReadings[i] = airTemperature;
-      }
-      airTemperatureAverage = airTemperature;
-      airTempInitialized = true;
-    }
-    airTempReadings[index] = airTemperature;
-    airTemperatureAverage = calculateMovingAverage(airTempReadings, NUM_READINGS);
-    doc["air_temp"] = floatToString(airTemperatureAverage, 2);
-    Serial.print(", Air Temp: "); Serial.print(airTemperatureAverage, 2);
+    doc["air_temp"] = floatToString(airTemperature, 2);
+    Serial.print(", Air Temp: "); Serial.print(airTemperature, 2);
 
     // capacitance max is 1023, needs calibration for each sensor
     int wetness = ss.touchRead(0);
-    if (!wetnessInitialized) {
-      for (int i = 0; i < NUM_READINGS; i++) {
-        wetnessReadings[i] = wetness;
-      }
-      wetnessAverage = wetness;
-      wetnessInitialized = true;
-    }
-    wetnessReadings[index] = wetness;
-    wetnessAverage = calculateMovingAverage(wetnessReadings, NUM_READINGS);
-    doc["wetness"] = floatToString(wetnessAverage, 1);
-    Serial.print(", Wetness: "); Serial.print(wetnessAverage, 1);
+    doc["wetness"] = floatToString(wetness, 1);
+    Serial.print(", Wetness: "); Serial.print(wetness, 1);
   }
 
   int rawBatteryValue = analogRead(A7);
   float batteryVoltage = rawBatteryValue * (3.3 / 1023.0) * 2;
-  if (!batteryInitialized) {
-    for (int i = 0; i < NUM_READINGS; i++) {
-      batteryReadings[i] = batteryVoltage;
-    }
-    batteryVoltageAverage = batteryVoltage;
-    batteryInitialized = true;
-  }
-  batteryReadings[index] = batteryVoltage;
-  batteryVoltageAverage = calculateMovingAverage(batteryReadings, NUM_READINGS);
-  doc["battery"] = floatToString(batteryVoltageAverage, 2);
-  Serial.print(", Battery: "); Serial.print(batteryVoltageAverage, 2);
+  doc["battery"] = floatToString(batteryVoltage, 4);
+  Serial.print(", Battery: "); Serial.print(batteryVoltage, 4);
 
   Serial.println();
-  index = (index + 1) % NUM_READINGS;
 
   // Serialize JSON document
   char jsonBuffer[255];
@@ -261,14 +207,6 @@ void resetAlarm(void) {
 
   zerortc.setAlarmTime(alarmHours, alarmMinutes, alarmSeconds);
   zerortc.enableAlarm(zerortc.MATCH_HHMMSS);
-}
-
-float calculateMovingAverage(float readings[], int size) {
-  float sum = 0;
-  for (int i = 0; i < size; i++) {
-    sum += readings[i];
-  }
-  return sum / size;
 }
 
 String floatToString(float value, int decimalPlaces) {
