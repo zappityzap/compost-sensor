@@ -10,7 +10,7 @@ Multiple, independent sensors broadcasting over LoRa to a base station. Sensors 
     * [Platinum RTD Sensor - PT1000 - 3 Wire 1 meter long](https://www.adafruit.com/product/3984)
     * [Adafruit PT1000 RTD Temperature Sensor Amplifier - MAX31865](https://www.adafruit.com/product/3328)
     * [Adafruit STEMMA Soil Sensor - I2C Capacitive Moisture Sensor - JST PH 2mm](https://www.adafruit.com/product/4026)
-        * Note: These seem unreliable. Testing [Chirp!](https://www.tindie.com/products/miceuz/i2c-soil-moisture-sensor/) sensors next.
+        * Note: These seem unreliable, and drain the battery. Testing [Chirp!](https://www.tindie.com/products/miceuz/i2c-soil-moisture-sensor/) sensors next.
 * Base Station (RX)
     * [Adafruit Feather M0 WiFi - ATSAMD21 + ATWINC1500](https://www.adafruit.com/product/3010)
     * [Adafruit LoRa Radio FeatherWing - RFM95W 900 MHz - RadioFruit](https://www.adafruit.com/product/3231)
