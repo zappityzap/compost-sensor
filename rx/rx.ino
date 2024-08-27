@@ -297,11 +297,11 @@ void loop() {
       // Sensor Battery
       if (doc.containsKey("battery")) {
         float sensorBatteryValue = doc["battery"];
-        Serial.print(", Battery: "); Serial.print(sensorBatteryValue, 2);
+        Serial.print(", Battery: "); Serial.print(sensorBatteryValue, 4);
         if (sensorBatteryMap.find(sensorId) == sensorBatteryMap.end() && !isnan(sensorBatteryValue)) {
           sensorBatteryEntityMap[sensorId] = new String(sensorId + "_sensorBattery");
           sensorBatteryNameMap[sensorId] = new String(sensorId + " Battery");
-          sensorBatteryMap[sensorId] = new HASensorNumber(sensorBatteryEntityMap[sensorId]->c_str(), HASensorNumber::PrecisionP2);
+          sensorBatteryMap[sensorId] = new HASensorNumber(sensorBatteryEntityMap[sensorId]->c_str(), HASensorNumber::PrecisionP3);
           sensorBatteryMap[sensorId]->setIcon("mdi:battery");
           sensorBatteryMap[sensorId]->setName(sensorBatteryNameMap[sensorId]->c_str());
           sensorBatteryMap[sensorId]->setUnitOfMeasurement("V");
