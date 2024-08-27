@@ -13,7 +13,7 @@
 RTCZero zerortc;
 
 const byte alarmSeconds = 0;
-const byte alarmMinutes = 1;
+const byte alarmMinutes = TRANSMIT_INTERVAL;
 const byte alarmHours = 0;
 
 volatile bool alarmFlag = false; // Start awake
