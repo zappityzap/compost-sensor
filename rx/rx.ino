@@ -157,7 +157,8 @@ void loop() {
 
   // check WiFi connection
   wifiStatus = WiFi.status();
-  while (wifiStatus != WL_CONNECTED) {
+  long rssi = WiFi.RSSI();
+  while (wifiStatus != WL_CONNECTED || rssi < -99) {
     Serial.print("Attempting to reconnect to SSID: ");
     Serial.println(WIFI_SSID);
     wifiStatus = WiFi.begin(WIFI_SSID, WIFI_PASS);
