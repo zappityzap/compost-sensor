@@ -159,14 +159,23 @@ void loop() {
   wifiStatus = WiFi.status();
   long rssi = WiFi.RSSI();
   while (wifiStatus != WL_CONNECTED || rssi < -99) {
-    Serial.print("Attempting to reconnect to SSID: ");
-    Serial.println(WIFI_SSID);
+    Serial.println("Resetting WiFi chip");
+    WiFi.end();
+    delay(1000);
     wifiStatus = WiFi.begin(WIFI_SSID, WIFI_PASS);
-    if (wifiStatus == WL_CONNECTED) {
-      printWiFiStatus();
-    } else {
-      delay(1000);
+    delay(1000);
+    // TODO WiFi.lowPowerMode();
+    while (WiFi.status() != WL_CONNECTED ) {
+      Serial.print("RX: Attempting to connect to SSID: ");
+      Serial.println(WIFI_SSID);
+      wifiStatus = WiFi.begin(WIFI_SSID, WIFI_PASS);
+      if (wifiStatus == WL_CONNECTED) {
+        printWiFiStatus();
+      } else {
+        delay(1000);
+      }
     }
+    // if that doesn't work...
   }
 
   if (rf95.available()) {
