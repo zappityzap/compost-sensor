@@ -2,6 +2,8 @@
 Multiple, independent sensors broadcasting over LoRa to a base station. Sensors are automatically discovered and added with unqiue short IDs. Base station uploads data to Home Assistant with MQTT over WiFi. Soil temperature, air temperature, LoRa and WiFi RSSI, and battery levels. Appears in Home Assistant as a single device:
 
 ![image](https://github.com/user-attachments/assets/42d3b3e0-2441-4c18-acfd-babad10f984e)
+![first-pile](https://github.com/user-attachments/assets/d5145ac7-7f69-44aa-a67c-b24bfb05647d)
+
 
 # Hardware
 * Sensor (TX)
