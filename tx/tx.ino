@@ -102,7 +102,9 @@ void setup() {
   analogReference(AR_DEFAULT);
 
   // Temperature
+  Serial.println("TX: Starting MAX31865")
   thermo.begin(MAX31865_3WIRE);
+  Serial.println("TX: Looking for MAX31865")
   if (thermo.readRTD() != 0) {
     thermoPresent = true;
     Serial.println("TX: MAX31865 found.");
@@ -111,6 +113,7 @@ void setup() {
   }
 
   // Soil
+  Serial.println("TX: Looking for Seesaw, may take 30 seconds to fail")
   if (ss.begin(0x36)) {
     seesawPresent = true;
     Serial.print("TX: Seesaw started. Version: ");
