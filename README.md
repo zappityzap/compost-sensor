@@ -36,12 +36,14 @@ Multiple, independent sensors broadcasting over LoRa to a base station. Sensors 
 All of these except RadioHead can be installed through the library manager in Arduino IDE.
 * Arduino SAMD
 * Adafruit SAMD Boards
+* [Adafruit Seesaw](https://github.com/adafruit/Adafruit_Seesaw)
+* [Adafruit MAX31865](https://github.com/adafruit/Adafruit_MAX31865)
+* [PubSubClient](https://pubsubclient.knolleary.net/)
 * [RTCZero](https://www.arduino.cc/reference/en/libraries/rtczero/)
-* [RadioHead](https://www.airspayce.com/mikem/arduino/RadioHead/)
 * [Wifi101](https://www.arduino.cc/reference/en/libraries/wifi101/)
+* [RadioHead](https://www.airspayce.com/mikem/arduino/RadioHead/)
 * [home-assistant-integration]( https://github.com/dawidchyrzynski/arduino-home-assistant)
   * Note: [My PR](https://github.com/zappityzap/arduino-home-assistant/tree/pr-setconfig) is required for dynamic sensor creation
-* [Adafruit Seesaw](https://github.com/adafruit/Adafruit_Seesaw)
 
 # Set up environment
 * Install Arduino IDE
@@ -56,10 +58,11 @@ All of these except RadioHead can be installed through the library manager in Ar
 * TODO is there any output with the default sketch? or the blink sketch? no error is probably good enough
 * You might need permission to use the serial port: `sudo usermod -aG dialout user` (remember to logout/in)
 * Install these libraries from the Library Manager (Tools > Manage Libraries...)
-  * `RTCZero`
-  * `Wifi101`
+  * `Adafruit_MAX31865`
   * `Adafruit Seesaw`
   * `PubSubClient`
+  * `RTCZero`
+  * `Wifi101`
 * Install `RadioHead` by [downloading the latest version](https://www.airspayce.com/mikem/arduino/RadioHead/) and extract the RadioHead folder to `~/Arduino/libraries`
 * Install `ArduinoJSON`
   * `cd ~/Arduino/libraries`
