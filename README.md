@@ -26,22 +26,47 @@ Multiple, independent sensors broadcasting over LoRa to a base station. Sensors 
 
 # Software
 * Latest [Ardunio IDE](http://www.arduino.cc/en/Main/Software)
-* Legacy v1.8.X Arduino IDE (for WiFi firmware updates)
+* Legacy v1.8.X Arduino IDE (for WiFi firmware updates), same page, scroll down
+* You might need [FUSE](https://github.com/AppImage/AppImageKit/wiki/FUSE) if the AppImage won't start
 
 ## Libraries
 All of these except RadioHead can be installed through the library manager in Arduino IDE.
 * Arduino SAMD
 * Adafruit SAMD Boards
 * [RTCZero](https://www.arduino.cc/reference/en/libraries/rtczero/)
-* [RadioHead](https://www.airspayce.com/mikem/arduino/RadioHead/) (get the latest version instead of Adafruit github copy)
+* [RadioHead](https://www.airspayce.com/mikem/arduino/RadioHead/)
 * [Wifi101](https://www.arduino.cc/reference/en/libraries/wifi101/)
 * [home-assistant-integration]( https://github.com/dawidchyrzynski/arduino-home-assistant)
   * Note: [My PR](https://github.com/zappityzap/arduino-home-assistant/tree/pr-setconfig) is required for dynamic sensor creation
 * [Adafruit Seesaw](https://github.com/adafruit/Adafruit_Seesaw)
 
 # Set up environment
-* Add board to Arduino IDE
-* Install libraries
+* Install Arduino IDE
+* Open preferences and add this additional board manager URL: `https://adafruit.github.io/arduino-board-index/package_adafruit_index.json`
+* Tools > Board > Board Manager...
+* Search for and install
+  * `Arduino SAMD Boards`
+  * `Adafruit SAMD Boards`
+* Restart the Arudino IDE
+* Open the Serial Monitor from the Tools menu
+* Try to connect to a board by selecting it from the dropdown
+* TODO is there any output with the default sketch? or the blink sketch? no error is probably good enough
+* You might need permission to use the serial port: `sudo usermod -aG dialout user` (remember to logout/in)
+* Install these libraries from the Library Manager (Tools > Manage Libraries...)
+  * `RTCZero`
+  * `Wifi101`
+  * `Adafruit Seesaw`
+  * `PubSubClient`
+* Install `RadioHead` by [downloading the latest version](https://www.airspayce.com/mikem/arduino/RadioHead/) and extract the RadioHead folder to `~/Arduino/libraries`
+* Install `ArduinoJSON`
+  * `cd ~/Arduino/libraries`
+  * `git clone https://github.com/bblanchon/ArduinoJson.git`
+* Install my PR of `home-assistant-intergration`:
+  * `cd ~/Arduino/libraries`
+  * `git clone https://github.com/zappityzap/arduino-home-assistant.git`
+  * `cd ~/Arduino/libraries/arduino-home-assistant`
+  * `git checkout pr-setconfig`
+* Restart the Arduino IDE
 
 # Update Firmware
 1. Open Arduino IDE (latest)
@@ -62,7 +87,7 @@ All of these except RadioHead can be installed through the library manager in Ar
 Both RX and TX sketches need a config.h
 1. Copy config.h.example to config.h
 1. Add your WiFi and MQTT details to the RX config.h
-1. Add your soil moisture sensor calibration values to the TX config.h
+1. Optional: Add your soil moisture sensor calibration values to the TX config.h
 1. Upload the RX sketch to the base station
 1. Upload the TX sketch to the sensor
 
