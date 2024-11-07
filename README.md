@@ -28,6 +28,7 @@ Multiple, independent sensors broadcasting over LoRa to a base station. Sensors 
 * Latest [Ardunio IDE](http://www.arduino.cc/en/Main/Software)
 * Legacy v1.8.X Arduino IDE (for WiFi firmware updates), same page, scroll down
 * You might need [FUSE](https://github.com/AppImage/AppImageKit/wiki/FUSE) if the AppImage won't start
+* [MQTT Explorer](https://mqtt-explorer.com/) is useful for troubleshooting
 
 ## Libraries
 All of these except RadioHead can be installed through the library manager in Arduino IDE.
