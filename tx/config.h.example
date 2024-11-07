@@ -1,4 +1,4 @@
-# Soil moisture calibration values
+// Soil moisture calibration values
 #define DRY_VALUE 320
 #define WET_VALUE 1016
 
