@@ -160,6 +160,59 @@ void loop() {
 
   Serial.println("RX: Loop begin");
 
+  // check WiFi connection
+  wifiStatus = WiFi.status();
+  long rssi = WiFi.RSSI();
+  while (wifiStatus != WL_CONNECTED || rssi < -99) {
+    Serial.println("Resetting WiFi chip");
+    WiFi.end();
+    delay(1000);
+    wifiStatus = WiFi.begin(WIFI_SSID, WIFI_PASS);
+    delay(1000);
+    // TODO WiFi.lowPowerMode();
+    while (WiFi.status() != WL_CONNECTED ) {
+      Serial.print("RX: Attempting to connect to SSID: ");
+      Serial.println(WIFI_SSID);
+      wifiStatus = WiFi.begin(WIFI_SSID, WIFI_PASS);
+      if (wifiStatus == WL_CONNECTED) {
+        printWiFiStatus();
+      } else {
+        delay(1000);
+      }
+    }
+    // if that doesn't work...
+  }
+
+  // Base station battery voltage
+  int rawBatteryValue = analogRead(A7);
+  float batteryVoltage = rawBatteryValue * (3.3 / 1023.0) * 2;
+  if (!batteryInitialized) {
+    for (int i = 0; i < NUM_READINGS; i++) {
+        baseBatteryReadings[i] = batteryVoltage;
+    }
+    baseBatteryAverage = batteryVoltage;
+    batteryInitialized = true;
+  }
+  baseBatteryReadings[batteryIndex] = batteryVoltage;
+  batteryIndex = (batteryIndex + 1) % NUM_READINGS;
+  baseBatteryAverage = calculateMovingAverage(baseBatteryReadings, NUM_READINGS);
+  baseBattery.setValue(baseBatteryAverage);
+
+  // WiFi RSSI
+  float wifiRssi = WiFi.RSSI();
+  if (!wifiInitialized) {
+    for (int i = 0; i < NUM_READINGS; i++) {
+      wifiRssiReadings[i] = wifiRssi;
+    }
+    wifiRssiAverage = wifiRssi;
+    wifiInitialized = true;
+  }
+  wifiRssiReadings[wifiIndex] = wifiRssi;
+  wifiRssiAverage = calculateMovingAverage(wifiRssiReadings, NUM_READINGS);
+  Serial.print(", WiFi RSSI: "); Serial.print(wifiRssiAverage, 1);
+  wifiIndex = (wifiIndex + 1) % NUM_READINGS;
+  baseWifiRssi.setValue(wifiRssiAverage);
+
   if (rf95.available()) {
     uint8_t buf[RH_RF95_MAX_MESSAGE_LEN];
     uint8_t len = sizeof(buf);
@@ -207,36 +260,6 @@ void loop() {
       Serial.print(", LoRa RSSI: "); Serial.print(loraRssiAverage, 1);
       loraRssiAverageMap[sensorId] = loraRssiAverage;
       loraRssiMap[sensorId]->setValue(loraRssiAverage);
-
-      // Base station battery voltage
-      int rawBatteryValue = analogRead(A7);
-      float batteryVoltage = rawBatteryValue * (3.3 / 1023.0) * 2;
-      if (!batteryInitialized) {
-        for (int i = 0; i < NUM_READINGS; i++) {
-            baseBatteryReadings[i] = batteryVoltage;
-        }
-        baseBatteryAverage = batteryVoltage;
-        batteryInitialized = true;
-      }
-      baseBatteryReadings[batteryIndex] = batteryVoltage;
-      batteryIndex = (batteryIndex + 1) % NUM_READINGS;
-      baseBatteryAverage = calculateMovingAverage(baseBatteryReadings, NUM_READINGS);
-      baseBattery.setValue(baseBatteryAverage);
-
-      // WiFi RSSI
-      float wifiRssi = WiFi.RSSI();
-      if (!wifiInitialized) {
-        for (int i = 0; i < NUM_READINGS; i++) {
-          wifiRssiReadings[i] = wifiRssi;
-        }
-        wifiRssiAverage = wifiRssi;
-        wifiInitialized = true;
-      }
-      wifiRssiReadings[wifiIndex] = wifiRssi;
-      wifiRssiAverage = calculateMovingAverage(wifiRssiReadings, NUM_READINGS);
-      Serial.print(", WiFi RSSI: "); Serial.print(wifiRssiAverage, 1);
-      wifiIndex = (wifiIndex + 1) % NUM_READINGS;
-      baseWifiRssi.setValue(wifiRssiAverage);
 
       // Soil Temperature  
       if (doc.containsKey("soil_temp")) {
