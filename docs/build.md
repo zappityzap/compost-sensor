@@ -29,38 +29,38 @@ Phillips screwdrivers (regular and small)
     * Another 150-250mm in length would be nice.
     * Be careful buying elsewhere, tolerances on eBay stuff is junk.
 
-# build
+# Build
 
-## base station (RX)
-solder headers and connectors onto the boards
-solder the spring antenna 
+## Base station (RX)
+1. Solder headers and connectors onto the boards
+1. Solder the spring antenna 
 
-## sensor (TX)
-solder the headers onto the feather
-    snap the header strip for the shorter side to length
-    put the headers into the breadboard, long side down
-    set the feather board right-side up, on top of the headers
-        both sides have labels but the bottom side is easier to read
-    solder each pin
-solder the spring antenna onto the feather
-solder the 2/3 wire pads together on the max31865 board
-solder the header strip onto the top side of the max31865 board
-    it's easier to connect the pins if they're on the same side as the labels
+## Sensor (TX)
+1. Solder the headers onto the feather
+    * Snap the header strip for the shorter side to length
+    * Put the headers into the breadboard, long side down
+    * Set the feather board right-side up, on top of the headers
+        * Both sides have labels but the bottom side is easier to read
+    * Solder each pin
+1. Solder the spring antenna onto the feather
+1. Solder the 2/3 wire pads together on the max31865 board
+1. Solder the header strip onto the top side of the max31865 board
+    * It's easier to connect the pins if they're on the same side as the labels
     
-insert the thermcouple into the stainless steel tube
-apply epoxy to secure the thermocouple
-    leave about half of it sticking out the end of the tube
-wait for the epoxy to cure
-fold the forked connectors in half so they'll fit into the terminal on the max31865 board
-insert both red connecotrs into the terminals on F+ side and secure with the screw
-insert the blue connector into either of the terminals on the F- side and secure with the screw
-connect the max31865 board to the feather using jumper cables as follows:
-    VIN -> 3.3V
-    GND -> GND
-    CLK -> 13
-    SDO -> 12
-    SDI -> 11
-    CS -> 10
-attach the battery to the feather
-put all the parts into the weatherproof box
+1. Insert the thermcouple into the stainless steel tube
+1. Apply epoxy to secure the thermocouple
+    * Leave about half of it sticking out the end of the tube
+1. Wait for the epoxy to cure
+1. Fold the forked connectors in half so they'll fit into the terminal on the max31865 board
+1. Insert both red connecotrs into the terminals on F+ side and secure with the screw
+1. Insert the blue connector into either of the terminals on the F- side and secure with the screw
+1. Connect the max31865 board to the feather using jumper cables as follows:
+    * VIN -> 3.3V
+    * GND -> GND
+    * CLK -> 13
+    * SDO -> 12
+    * SDI -> 11
+    * CS -> 10
+1. Attach the battery to the feather
+1. Put all the parts into the weatherproof box
 
