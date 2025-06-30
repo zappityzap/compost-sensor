@@ -1,9 +1,9 @@
 # Tools and Materials
-Soldering iron with a smaller tip, Hakko
-Breadboard, for holding headers while soldering them to the board
-Solder, what diameter?
-Jumper wires
-Phillips screwdrivers (regular and small)
+* Soldering iron with a smaller tip, Hakko
+* Breadboard, for holding headers while soldering them to the board
+* Solder, what diameter and type?
+* Jumper wires
+* Phillips screwdrivers (regular and small)
 
 # Parts
 * Base Station (RX)
